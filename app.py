@@ -764,3 +764,4 @@ st.download_button(
     file_name=f"APU_{apu.replace(' ', '_')}.csv",
     mime="text/csv"
 )low_html=True
+ )
