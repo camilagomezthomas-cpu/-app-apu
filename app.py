@@ -7,17 +7,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# =====================================================
-# DATOS GENERALES DEL SISTEMA
-# =====================================================
-
 JORNADA_HORAS = 8
 PRESTACIONES_SOCIALES = 1.65
 PRECIO_GASOLINA_DEFECTO = 10984.0
-
-# =====================================================
-# BASE DE DATOS
-# =====================================================
 
 MANO_OBRA_DB = {
     "Oficial": 100000,
@@ -25,6 +17,10 @@ MANO_OBRA_DB = {
     "Obrero": 70000,
     "Maestro de obra": 140000,
     "Operador equipo": 120000,
+    "Operador retroexcavadora": 115909.09,
+    "Operador volqueta": 127272.73,
+    "Topógrafo": 107142.86,
+    "Cadenero": 83928.57,
     "Soldador": 130000,
     "Armador": 110000,
 }
@@ -72,6 +68,13 @@ EQUIPOS_DB = {
         "rendimiento": 80.0,
         "consumo_gal_h": 0.0
     },
+    "Compactador manual": {
+        "tipo": "Rana / canguro",
+        "unidad": "h",
+        "tarifa_hora": 45000,
+        "rendimiento": 12.0,
+        "consumo_gal_h": 0.8
+    },
 }
 
 APUS = {
@@ -79,7 +82,7 @@ APUS = {
         "unidad": "m³",
         "capitulo": "MOVIMIENTO DE TIERRAS",
         "equipos": ["Retroexcavadora", "Volqueta"],
-        "mano": ["Operador equipo", "Ayudante"],
+        "mano": ["Operador retroexcavadora", "Operador volqueta", "Ayudante"],
         "rendimiento": 82.98,
         "materiales": "gasolina",
         "checklist": [
@@ -103,7 +106,7 @@ APUS = {
             "Alambre negro": {"unidad": "kg", "cantidad": 1.5, "precio": 8000},
         },
         "checklist": [
-            "Excavación conforme a planos",
+            "Excavación de zapata conforme a planos",
             "Solado o limpieza de fondo verificado",
             "Acero colocado según diseño",
             "Formaleta revisada y asegurada",
@@ -171,11 +174,30 @@ APUS = {
             "Montaje seguro en campo"
         ],
     },
+    "Instalación de tubería": {
+        "unidad": "m",
+        "capitulo": "INSTALACIÓN DE TUBERÍA",
+        "equipos": ["Compactador manual", "Formaleta / herramienta menor"],
+        "mano": ["Oficial", "Ayudante", "Topógrafo", "Cadenero"],
+        "rendimiento": 12.0,
+        "materiales": {
+            "Tubería PVC / sanitaria": {"unidad": "m", "cantidad": 1.0, "precio": 65000},
+            "Arena de cama": {"unidad": "m³", "cantidad": 0.08, "precio": 85000},
+            "Material seleccionado de relleno": {"unidad": "m³", "cantidad": 0.12, "precio": 70000},
+            "Pegante / accesorios": {"unidad": "global", "cantidad": 0.05, "precio": 45000},
+        },
+        "checklist": [
+            "Replanteo topográfico del eje de tubería realizado",
+            "Nivel de fondo de zanja verificado",
+            "Cama de arena instalada",
+            "Pendiente de tubería revisada",
+            "Uniones y accesorios instalados correctamente",
+            "Relleno y compactación por capas verificados",
+            "Registro fotográfico realizado",
+            "Uso de EPP verificado"
+        ],
+    },
 }
-
-# =====================================================
-# FUNCIONES
-# =====================================================
 
 def pesos(valor):
     return f"$ {float(valor):,.2f}"
@@ -189,10 +211,6 @@ def formato(valor, decimales=2):
 def csv_download(df):
     return df.to_csv(index=False).encode("utf-8-sig")
 
-# =====================================================
-# INTERFAZ
-# =====================================================
-
 st.title("📊 MATRIZ APU - SISTEMA DE PRESUPUESTOS DE OBRA CIVIL")
 st.caption("Trabajo académico universitario - Análisis de Precios Unitarios")
 
@@ -200,10 +218,6 @@ st.sidebar.header("Menú de APU")
 apu = st.sidebar.selectbox("Seleccione el APU", list(APUS.keys()))
 data_apu = APUS[apu]
 unidad = data_apu["unidad"]
-
-# =====================================================
-# DATOS DEL PROYECTO
-# =====================================================
 
 st.subheader("DATOS DEL PROYECTO")
 
@@ -226,10 +240,6 @@ with col2:
     unidad = st.text_input("Unidad del APU", unidad)
 
 st.divider()
-
-# =====================================================
-# PARÁMETROS DEL APU
-# =====================================================
 
 st.subheader("1. PARÁMETROS DE CÁLCULO")
 
@@ -275,10 +285,6 @@ else:
     factor_expansion = 0
 
 st.divider()
-
-# =====================================================
-# EQUIPOS
-# =====================================================
 
 st.subheader("2. EQUIPO")
 
@@ -330,10 +336,6 @@ equipo_df = pd.DataFrame(filas_equipo)
 subtotal_equipo_unitario = equipo_df["VALOR UNITARIO"].sum() if not equipo_df.empty else 0
 
 st.divider()
-
-# =====================================================
-# MATERIALES
-# =====================================================
 
 st.subheader("3. MATERIALES DE OBRA")
 
@@ -412,10 +414,6 @@ subtotal_materiales_unitario = materiales_df["VALOR UNITARIO"].sum() if not mate
 
 st.divider()
 
-# =====================================================
-# TRANSPORTE
-# =====================================================
-
 st.subheader("4. TRANSPORTE")
 
 filas_transporte = []
@@ -460,10 +458,6 @@ subtotal_transporte_unitario = subtotal_transporte_total / cantidad_obra if cant
 
 st.divider()
 
-# =====================================================
-# MANO DE OBRA
-# =====================================================
-
 st.subheader("5. MANO DE OBRA")
 
 filas_mano = []
@@ -498,6 +492,7 @@ for trabajador in data_apu["mano"]:
         "CANTIDAD": cantidad_trabajadores,
         "JORNAL": jornal,
         "PRESTACIONES": PRESTACIONES_SOCIALES,
+        "JORNAL TOTAL": jornal_total,
         "COSTO HORA": costo_hora,
         "RENDIMIENTO": rendimiento_base,
         "VALOR UNITARIO": valor_unitario_mano,
@@ -508,10 +503,6 @@ mano_df = pd.DataFrame(filas_mano)
 subtotal_mano_unitario = mano_df["VALOR UNITARIO"].sum() if not mano_df.empty else 0
 
 st.divider()
-
-# =====================================================
-# LISTA DE CHEQUEO
-# =====================================================
 
 st.subheader("6. LISTA DE CHEQUEO EN CAMPO")
 
@@ -525,10 +516,6 @@ st.progress(cumplimiento / 100)
 st.info(f"Cumplimiento de lista de chequeo: {cumplimiento:.1f}%")
 
 st.divider()
-
-# =====================================================
-# RESUMEN DE COSTOS
-# =====================================================
 
 costo_directo_unitario = (
     subtotal_equipo_unitario +
@@ -549,10 +536,6 @@ r3.metric("Valor unitario total", pesos(valor_unitario_total))
 r4.metric("Valor total del ítem", pesos(valor_total_item))
 
 st.divider()
-
-# =====================================================
-# TABLA FINAL
-# =====================================================
 
 st.subheader("7. TABLA FINAL DEL PRESUPUESTO APU")
 
@@ -686,8 +669,8 @@ html += f"""
 <tr><td colspan="8" class="section">4. MANO DE OBRA</td></tr>
 <tr>
 <th>TRABAJADOR</th><th>CANTIDAD</th><th>JORNAL</th>
-<th>PRESTACIONES</th><th>COSTO HORA</th>
-<th>RENDIMIENTO</th><th>VALOR UNITARIO</th><th>VALOR PARCIAL</th>
+<th>PRESTACIONES</th><th>JORNAL TOTAL</th>
+<th>COSTO HORA</th><th>RENDIMIENTO</th><th>VALOR UNITARIO</th>
 </tr>
 """
 
@@ -698,10 +681,10 @@ for _, row in mano_df.iterrows():
     <td>{formato(row['CANTIDAD'], 2)}</td>
     <td>{pesos(row['JORNAL'])}</td>
     <td>{row['PRESTACIONES']}</td>
+    <td>{pesos(row['JORNAL TOTAL'])}</td>
     <td>{pesos(row['COSTO HORA'])}</td>
     <td>{formato(row['RENDIMIENTO'], 2)} {unidad}/h</td>
     <td>{pesos(row['VALOR UNITARIO'])}</td>
-    <td>{pesos(row['VALOR PARCIAL'])}</td>
     </tr>
     """
 
@@ -715,10 +698,6 @@ html += f"""
 """
 
 st.markdown(html, unsafe_allow_html=True)
-
-# =====================================================
-# EXPORTAR CSV
-# =====================================================
 
 tabla_exportar = pd.DataFrame({
     "Concepto": [
