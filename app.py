@@ -26,62 +26,14 @@ MANO_OBRA_DB = {
 }
 
 EQUIPOS_DB = {
-    "Retroexcavadora": {
-        "tipo": "75 HP",
-        "tarifa_hora": 90000,
-        "tiempo_min": 4.7,
-        "capacidad": 6.5,
-        "consumo_gal_h": 5.0,
-    },
-    "Volqueta": {
-        "tipo": "6.5 m³",
-        "tarifa_hora": 75000,
-        "tiempo_min": 4.7,
-        "capacidad": 6.5,
-        "consumo_gal_h": 4.0,
-    },
-    "Herramienta menor": {
-        "tipo": "%",
-        "tarifa_hora": 0,
-        "tiempo_min": 0,
-        "capacidad": 0,
-        "consumo_gal_h": 0.0,
-    },
-    "Mezcladora": {
-        "tipo": "Concreto",
-        "tarifa_hora": 60000,
-        "tiempo_min": 24,
-        "capacidad": 1.0,
-        "consumo_gal_h": 0.0,
-    },
-    "Vibrador de concreto": {
-        "tipo": "Eléctrico",
-        "tarifa_hora": 35000,
-        "tiempo_min": 20,
-        "capacidad": 1.0,
-        "consumo_gal_h": 0.0,
-    },
-    "Formaleta / herramienta menor": {
-        "tipo": "Manual",
-        "tarifa_hora": 25000,
-        "tiempo_min": 6,
-        "capacidad": 1.0,
-        "consumo_gal_h": 0.0,
-    },
-    "Soldadora": {
-        "tipo": "Eléctrica",
-        "tarifa_hora": 85000,
-        "tiempo_min": 0.75,
-        "capacidad": 1.0,
-        "consumo_gal_h": 0.0,
-    },
-    "Compactador manual": {
-        "tipo": "Rana / canguro",
-        "tarifa_hora": 45000,
-        "tiempo_min": 5,
-        "capacidad": 1.0,
-        "consumo_gal_h": 0.8,
-    },
+    "Retroexcavadora": {"tipo": "75 HP", "tarifa_hora": 90000, "tiempo_min": 4.7, "capacidad": 6.5, "consumo_gal_h": 5.0},
+    "Volqueta": {"tipo": "6.5 m³", "tarifa_hora": 75000, "tiempo_min": 4.7, "capacidad": 6.5, "consumo_gal_h": 4.0},
+    "Herramienta menor": {"tipo": "%", "tarifa_hora": 0, "tiempo_min": 0, "capacidad": 0, "consumo_gal_h": 0.0},
+    "Mezcladora": {"tipo": "Concreto", "tarifa_hora": 60000, "tiempo_min": 24, "capacidad": 1.0, "consumo_gal_h": 0.0},
+    "Vibrador de concreto": {"tipo": "Eléctrico", "tarifa_hora": 35000, "tiempo_min": 20, "capacidad": 1.0, "consumo_gal_h": 0.0},
+    "Formaleta / herramienta menor": {"tipo": "Manual", "tarifa_hora": 25000, "tiempo_min": 6, "capacidad": 1.0, "consumo_gal_h": 0.0},
+    "Soldadora": {"tipo": "Eléctrica", "tarifa_hora": 85000, "tiempo_min": 0.75, "capacidad": 1.0, "consumo_gal_h": 0.0},
+    "Compactador manual": {"tipo": "Rana / canguro", "tarifa_hora": 45000, "tiempo_min": 5, "capacidad": 1.0, "consumo_gal_h": 0.8},
 }
 
 APUS = {
@@ -91,7 +43,6 @@ APUS = {
         "equipos": ["Retroexcavadora", "Volqueta"],
         "mano": ["Operador retroexcavadora", "Operador volqueta", "Ayudante", "Topógrafo", "Cadenero"],
         "materiales": "gasolina",
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Replanteo del área de excavación verificado",
             "Profundidad y ancho de excavación revisados",
@@ -107,7 +58,6 @@ APUS = {
         "equipos": ["Herramienta menor"],
         "mano": ["Oficial", "Ayudante", "Auxiliar de ingeniería"],
         "materiales": {},
-        "tipo_rendimiento": "manual",
         "checklist": [
             "Replanteo realizado",
             "Profundidad verificada",
@@ -127,7 +77,6 @@ APUS = {
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 85, "precio": 5200},
             "Alambre negro": {"unidad": "kg", "cantidad": 1.5, "precio": 8000},
         },
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Excavación conforme a planos",
             "Solado verificado",
@@ -147,7 +96,6 @@ APUS = {
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 95, "precio": 5200},
             "Formaleta": {"unidad": "m²", "cantidad": 6, "precio": 35000},
         },
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Acero instalado según planos",
             "Formaleta alineada y nivelada",
@@ -167,7 +115,6 @@ APUS = {
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 12, "precio": 5200},
             "Aligerante / casetón": {"unidad": "und", "cantidad": 1, "precio": 18000},
         },
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Formaleta instalada",
             "Aligerantes colocados",
@@ -187,7 +134,6 @@ APUS = {
             "Electrodos / soldadura": {"unidad": "kg", "cantidad": 0.03, "precio": 18000},
             "Pintura anticorrosiva": {"unidad": "gl", "cantidad": 0.01, "precio": 95000},
         },
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Material metálico certificado",
             "Cortes revisados",
@@ -203,12 +149,16 @@ APUS = {
         "equipos": ["Compactador manual", "Formaleta / herramienta menor"],
         "mano": ["Oficial", "Ayudante", "Topógrafo", "Cadenero"],
         "materiales": {
+            "Puntales (1x10\")": {"unidad": "GLOBAL", "cantidad": 0.597, "precio": 59900},
+            "Largueros (1x10\")": {"unidad": "GLOBAL", "cantidad": 0.473, "precio": 59900},
+            "Codales (2x3\")": {"unidad": "GLOBAL", "cantidad": 0.038, "precio": 28900},
+            "Puntilla cabeza 2-1/2\" 500g": {"unidad": "GLOBAL", "cantidad": 0.034, "precio": 5100},
+            "Alambre calibre 16": {"unidad": "GLOBAL", "cantidad": 0.021, "precio": 15400},
             "Tubería PVC / sanitaria": {"unidad": "m", "cantidad": 1.0, "precio": 65000},
             "Arena de cama": {"unidad": "m³", "cantidad": 0.08, "precio": 85000},
             "Material seleccionado de relleno": {"unidad": "m³", "cantidad": 0.12, "precio": 70000},
-            "Pegante / accesorios": {"unidad": "global", "cantidad": 0.05, "precio": 45000},
+            "Pegante / accesorios": {"unidad": "GLOBAL", "cantidad": 0.05, "precio": 45000},
         },
-        "tipo_rendimiento": "ciclo_minutos",
         "checklist": [
             "Replanteo topográfico realizado",
             "Nivel de fondo de zanja verificado",
@@ -534,6 +484,8 @@ herramienta_df = pd.DataFrame([{
     "UND": "%",
     "CANTIDAD": herramienta_menor_pct,
     "TARIFA": subtotal_mano_unitario,
+    "TIEMPO CICLO": "",
+    "CAPACIDAD": "",
     "RENDIMIENTO HORA": "",
     "RENDIMIENTO DÍA": "",
     "VALOR UNITARIO": valor_herramienta_menor_unitario,
@@ -569,8 +521,10 @@ valor_total_item = valor_unitario_total * cantidad_obra
 
 st.subheader("8. TABLAS INDIVIDUALES")
 
+equipo_final_df = pd.concat([equipo_df, herramienta_df], ignore_index=True)
+
 st.markdown("### Tabla Equipo")
-st.dataframe(pd.concat([equipo_df, herramienta_df], ignore_index=True), use_container_width=True)
+st.dataframe(equipo_final_df, use_container_width=True)
 
 st.markdown("### Tabla Materiales")
 st.dataframe(materiales_df, use_container_width=True)
@@ -594,8 +548,6 @@ r4.metric("Valor total del ítem", pesos(valor_total_item))
 st.divider()
 
 st.subheader("10. TABLA FINAL DEL PRESUPUESTO APU")
-
-equipo_final_df = pd.concat([equipo_df, herramienta_df], ignore_index=True)
 
 html = f"""
 <style>
