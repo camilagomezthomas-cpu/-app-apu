@@ -16,7 +16,6 @@ MANO_OBRA_DB = {
     "Ayudante": 71428.57,
     "Obrero": 70000,
     "Maestro de obra": 140000,
-    "Operador equipo": 120000,
     "Operador retroexcavadora": 115909.09,
     "Operador volqueta": 127272.73,
     "Topógrafo": 107142.86,
@@ -28,52 +27,52 @@ MANO_OBRA_DB = {
 EQUIPOS_DB = {
     "Retroexcavadora": {
         "tipo": "75 HP",
-        "unidad": "h",
         "tarifa_hora": 90000,
-        "rendimiento": 82.98,
-        "consumo_gal_h": 5.0
+        "tiempo_min": 4.7,
+        "capacidad": 6.5,
+        "consumo_gal_h": 5.0,
     },
     "Volqueta": {
         "tipo": "6.5 m³",
-        "unidad": "h",
         "tarifa_hora": 75000,
-        "rendimiento": 82.98,
-        "consumo_gal_h": 4.0
+        "tiempo_min": 4.7,
+        "capacidad": 6.5,
+        "consumo_gal_h": 4.0,
     },
     "Mezcladora": {
         "tipo": "Concreto",
-        "unidad": "h",
         "tarifa_hora": 60000,
-        "rendimiento": 2.5,
-        "consumo_gal_h": 0.0
+        "tiempo_min": 24,
+        "capacidad": 1.0,
+        "consumo_gal_h": 0.0,
     },
     "Vibrador de concreto": {
         "tipo": "Eléctrico",
-        "unidad": "h",
         "tarifa_hora": 35000,
-        "rendimiento": 3.0,
-        "consumo_gal_h": 0.0
+        "tiempo_min": 20,
+        "capacidad": 1.0,
+        "consumo_gal_h": 0.0,
     },
     "Formaleta / herramienta menor": {
         "tipo": "Manual",
-        "unidad": "h",
         "tarifa_hora": 25000,
-        "rendimiento": 10.0,
-        "consumo_gal_h": 0.0
+        "tiempo_min": 6,
+        "capacidad": 1.0,
+        "consumo_gal_h": 0.0,
     },
     "Soldadora": {
         "tipo": "Eléctrica",
-        "unidad": "h",
         "tarifa_hora": 85000,
-        "rendimiento": 80.0,
-        "consumo_gal_h": 0.0
+        "tiempo_min": 0.75,
+        "capacidad": 1.0,
+        "consumo_gal_h": 0.0,
     },
     "Compactador manual": {
         "tipo": "Rana / canguro",
-        "unidad": "h",
         "tarifa_hora": 45000,
-        "rendimiento": 12.0,
-        "consumo_gal_h": 0.8
+        "tiempo_min": 5,
+        "capacidad": 1.0,
+        "consumo_gal_h": 0.8,
     },
 }
 
@@ -82,16 +81,15 @@ APUS = {
         "unidad": "m³",
         "capitulo": "MOVIMIENTO DE TIERRAS",
         "equipos": ["Retroexcavadora", "Volqueta"],
-        "mano": ["Operador retroexcavadora", "Operador volqueta", "Ayudante"],
-        "rendimiento": 82.98,
+        "mano": ["Operador retroexcavadora", "Operador volqueta", "Ayudante", "Topógrafo", "Cadenero"],
         "materiales": "gasolina",
         "checklist": [
             "Replanteo del área de excavación verificado",
             "Profundidad y ancho de excavación revisados",
-            "Taludes o entibado revisados según condición del terreno",
+            "Taludes o entibado revisados",
             "Material excavado retirado correctamente",
             "Botadero autorizado definido",
-            "Uso de EPP verificado"
+            "Uso de EPP verificado",
         ],
     },
     "Zapata en concreto": {
@@ -99,19 +97,18 @@ APUS = {
         "capitulo": "CIMENTACIÓN",
         "equipos": ["Mezcladora", "Vibrador de concreto"],
         "mano": ["Oficial", "Ayudante"],
-        "rendimiento": 2.5,
         "materiales": {
             "Concreto": {"unidad": "m³", "cantidad": 1.05, "precio": 420000},
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 85, "precio": 5200},
             "Alambre negro": {"unidad": "kg", "cantidad": 1.5, "precio": 8000},
         },
         "checklist": [
-            "Excavación de zapata conforme a planos",
-            "Solado o limpieza de fondo verificado",
+            "Excavación conforme a planos",
+            "Solado verificado",
             "Acero colocado según diseño",
-            "Formaleta revisada y asegurada",
+            "Formaleta revisada",
             "Concreto vibrado correctamente",
-            "Curado inicial realizado"
+            "Curado inicial realizado",
         ],
     },
     "Viga en concreto": {
@@ -119,19 +116,18 @@ APUS = {
         "capitulo": "ESTRUCTURA EN CONCRETO",
         "equipos": ["Vibrador de concreto", "Formaleta / herramienta menor"],
         "mano": ["Oficial", "Ayudante"],
-        "rendimiento": 2.0,
         "materiales": {
             "Concreto": {"unidad": "m³", "cantidad": 1.05, "precio": 420000},
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 95, "precio": 5200},
             "Formaleta": {"unidad": "m²", "cantidad": 6, "precio": 35000},
         },
         "checklist": [
-            "Acero de refuerzo instalado según planos",
+            "Acero instalado según planos",
             "Formaleta alineada y nivelada",
             "Separadores colocados",
             "Concreto vaciado correctamente",
             "Vibrado realizado",
-            "Curado verificado"
+            "Curado verificado",
         ],
     },
     "Losa aligerada": {
@@ -139,19 +135,18 @@ APUS = {
         "capitulo": "ESTRUCTURA EN CONCRETO",
         "equipos": ["Vibrador de concreto", "Formaleta / herramienta menor"],
         "mano": ["Oficial", "Ayudante"],
-        "rendimiento": 12.0,
         "materiales": {
             "Concreto": {"unidad": "m³", "cantidad": 0.12, "precio": 420000},
             "Acero de refuerzo": {"unidad": "kg", "cantidad": 12, "precio": 5200},
             "Aligerante / casetón": {"unidad": "und", "cantidad": 1, "precio": 18000},
         },
         "checklist": [
-            "Formaleta instalada y apuntalada",
-            "Aligerantes o casetones colocados",
-            "Acero de refuerzo revisado",
+            "Formaleta instalada",
+            "Aligerantes colocados",
+            "Acero revisado",
             "Instalaciones embebidas verificadas",
             "Concreto vaciado y vibrado",
-            "Curado realizado"
+            "Curado realizado",
         ],
     },
     "Estructura metálica": {
@@ -159,7 +154,6 @@ APUS = {
         "capitulo": "ESTRUCTURA METÁLICA",
         "equipos": ["Soldadora"],
         "mano": ["Soldador", "Ayudante"],
-        "rendimiento": 80.0,
         "materiales": {
             "Acero estructural": {"unidad": "kg", "cantidad": 1.0, "precio": 7800},
             "Electrodos / soldadura": {"unidad": "kg", "cantidad": 0.03, "precio": 18000},
@@ -167,11 +161,11 @@ APUS = {
         },
         "checklist": [
             "Material metálico certificado",
-            "Cortes y perforaciones revisados",
-            "Soldadura inspeccionada visualmente",
-            "Alineación y nivelación verificadas",
+            "Cortes revisados",
+            "Soldadura inspeccionada",
+            "Alineación verificada",
             "Pintura anticorrosiva aplicada",
-            "Montaje seguro en campo"
+            "Montaje seguro",
         ],
     },
     "Instalación de tubería": {
@@ -179,7 +173,6 @@ APUS = {
         "capitulo": "INSTALACIÓN DE TUBERÍA",
         "equipos": ["Compactador manual", "Formaleta / herramienta menor"],
         "mano": ["Oficial", "Ayudante", "Topógrafo", "Cadenero"],
-        "rendimiento": 12.0,
         "materiales": {
             "Tubería PVC / sanitaria": {"unidad": "m", "cantidad": 1.0, "precio": 65000},
             "Arena de cama": {"unidad": "m³", "cantidad": 0.08, "precio": 85000},
@@ -187,14 +180,14 @@ APUS = {
             "Pegante / accesorios": {"unidad": "global", "cantidad": 0.05, "precio": 45000},
         },
         "checklist": [
-            "Replanteo topográfico del eje de tubería realizado",
+            "Replanteo topográfico realizado",
             "Nivel de fondo de zanja verificado",
             "Cama de arena instalada",
             "Pendiente de tubería revisada",
-            "Uniones y accesorios instalados correctamente",
-            "Relleno y compactación por capas verificados",
+            "Uniones instaladas correctamente",
+            "Relleno y compactación verificados",
             "Registro fotográfico realizado",
-            "Uso de EPP verificado"
+            "Uso de EPP verificado",
         ],
     },
 }
@@ -203,18 +196,19 @@ def pesos(valor):
     return f"$ {float(valor):,.2f}"
 
 def formato(valor, decimales=2):
-    try:
-        return f"{float(valor):,.{decimales}f}"
-    except:
-        return valor
+    return f"{float(valor):,.{decimales}f}"
 
-def csv_download(df):
-    return df.to_csv(index=False).encode("utf-8-sig")
+def rendimiento_hora(tiempo_min, capacidad):
+    if tiempo_min <= 0:
+        return 0
+    return (60 * capacidad) / tiempo_min
+
+def rendimiento_dia(rend_hora):
+    return rend_hora * JORNADA_HORAS
 
 st.title("📊 MATRIZ APU - SISTEMA DE PRESUPUESTOS DE OBRA CIVIL")
 st.caption("Trabajo académico universitario - Análisis de Precios Unitarios")
 
-st.sidebar.header("Menú de APU")
 apu = st.sidebar.selectbox("Seleccione el APU", list(APUS.keys()))
 data_apu = APUS[apu]
 unidad = data_apu["unidad"]
@@ -224,14 +218,8 @@ st.subheader("DATOS DEL PROYECTO")
 col1, col2 = st.columns(2)
 
 with col1:
-    proyecto = st.text_input(
-        "Proyecto",
-        "UNIVERSIDAD MILITAR NUEVA GRANADA - PRESUPUESTO DE OBRA CIVIL"
-    )
-    integrantes = st.text_input(
-        "Integrantes",
-        "CAMILA GÓMEZ - CHAROL RAMÍREZ"
-    )
+    proyecto = st.text_input("Proyecto", "UNIVERSIDAD MILITAR NUEVA GRANADA - PRESUPUESTO DE OBRA CIVIL")
+    integrantes = st.text_input("Integrantes", "CAMILA GÓMEZ - CHAROL RAMÍREZ")
     anio = st.number_input("Año", value=2026, step=1)
 
 with col2:
@@ -255,71 +243,50 @@ if apu == "Excavación mecánica":
     with c4:
         profundidad = st.number_input("Profundidad H (m)", value=1.5, min_value=0.0)
 
-    c5, c6, c7 = st.columns(3)
-
-    with c5:
-        factor_expansion = st.number_input("Factor de expansión", value=1.25, min_value=1.0)
-    with c6:
-        rendimiento_base = st.number_input("Rendimiento excavación (m³/h)", value=float(data_apu["rendimiento"]), min_value=0.01)
-    with c7:
-        aiu_porcentaje = st.number_input("AIU (%)", value=25.0, min_value=0.0)
-
+    factor_expansion = st.number_input("Factor de expansión", value=1.25, min_value=1.0)
     area_perfil = ((base_menor + base_mayor) / 2) * profundidad
     volumen_excavacion = area_perfil * longitud
     volumen_expansion = volumen_excavacion * factor_expansion
     cantidad_obra = volumen_excavacion
 
 else:
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-        cantidad_obra = st.number_input(f"Cantidad de obra ({unidad})", value=100.0, min_value=0.0)
-    with c2:
-        rendimiento_base = st.number_input(f"Rendimiento ({unidad}/h)", value=float(data_apu["rendimiento"]), min_value=0.01)
-    with c3:
-        aiu_porcentaje = st.number_input("AIU (%)", value=25.0, min_value=0.0)
-
+    cantidad_obra = st.number_input(f"Cantidad de obra ({unidad})", value=100.0, min_value=0.0)
     area_perfil = 0
     volumen_excavacion = 0
     volumen_expansion = 0
     factor_expansion = 0
+
+aiu_porcentaje = st.number_input("AIU (%)", value=25.0, min_value=0.0)
 
 st.divider()
 
 st.subheader("2. EQUIPO")
 
 filas_equipo = []
+rendimientos_equipo = {}
 
 for equipo in data_apu["equipos"]:
     datos = EQUIPOS_DB[equipo]
 
-    e1, e2, e3 = st.columns(3)
+    st.markdown(f"#### {equipo}")
+
+    e1, e2, e3, e4 = st.columns(4)
 
     with e1:
-        cantidad_equipo = st.number_input(
-            f"Cantidad {equipo}",
-            value=1.0,
-            min_value=0.0,
-            key=f"cant_equipo_{equipo}"
-        )
-
+        cantidad_equipo = st.number_input(f"Cantidad {equipo}", value=1.0, min_value=0.0, key=f"cant_equipo_{equipo}")
     with e2:
-        tarifa_hora = st.number_input(
-            f"Tarifa {equipo} ($/h)",
-            value=float(datos["tarifa_hora"]),
-            min_value=0.0,
-            key=f"tarifa_{equipo}"
-        )
-
+        tarifa_hora = st.number_input(f"Tarifa {equipo} ($/h)", value=float(datos["tarifa_hora"]), min_value=0.0, key=f"tarifa_{equipo}")
     with e3:
-        rendimiento_equipo = st.number_input(
-            f"Rendimiento {equipo} ({unidad}/h)",
-            value=float(datos["rendimiento"]),
-            min_value=0.01,
-            key=f"rendimiento_{equipo}"
-        )
+        tiempo_min = st.number_input(f"Tiempo ciclo {equipo} (min)", value=float(datos["tiempo_min"]), min_value=0.01, key=f"tiempo_{equipo}")
+    with e4:
+        capacidad = st.number_input(f"Capacidad {equipo} ({unidad})", value=float(datos["capacidad"]), min_value=0.01, key=f"capacidad_{equipo}")
 
-    valor_unitario = (cantidad_equipo * tarifa_hora) / rendimiento_equipo
+    rh = rendimiento_hora(tiempo_min, capacidad)
+    rd = rendimiento_dia(rh)
+
+    rendimientos_equipo[equipo] = rh
+
+    valor_unitario = (cantidad_equipo * tarifa_hora) / rh if rh > 0 else 0
 
     filas_equipo.append({
         "DESCRIPCIÓN": equipo.upper(),
@@ -327,7 +294,10 @@ for equipo in data_apu["equipos"]:
         "UND": "h",
         "CANTIDAD": cantidad_equipo,
         "TARIFA": tarifa_hora,
-        "RENDIMIENTO": rendimiento_equipo,
+        "TIEMPO CICLO": tiempo_min,
+        "CAPACIDAD": capacidad,
+        "RENDIMIENTO HORA": rh,
+        "RENDIMIENTO DÍA": rd,
         "VALOR UNITARIO": valor_unitario,
         "VALOR PARCIAL": valor_unitario * cantidad_obra
     })
@@ -342,61 +312,38 @@ st.subheader("3. MATERIALES DE OBRA")
 filas_materiales = []
 
 if data_apu["materiales"] == "gasolina":
-    g1, g2, g3 = st.columns(3)
+    precio_gasolina = st.number_input("Precio gasolina ($/gal)", value=PRECIO_GASOLINA_DEFECTO, min_value=0.0)
 
-    with g1:
-        precio_gasolina = st.number_input("Precio gasolina ($/gal)", value=PRECIO_GASOLINA_DEFECTO, min_value=0.0)
-    with g2:
-        consumo_retro = st.number_input("Consumo retroexcavadora (gal/h)", value=5.0, min_value=0.0)
-    with g3:
-        consumo_volqueta = st.number_input("Consumo volqueta (gal/h)", value=4.0, min_value=0.0)
+    for equipo in data_apu["equipos"]:
+        consumo = st.number_input(
+            f"Consumo gasolina {equipo} (gal/h)",
+            value=float(EQUIPOS_DB[equipo]["consumo_gal_h"]),
+            min_value=0.0,
+            key=f"consumo_{equipo}"
+        )
 
-    rendimiento_retro = EQUIPOS_DB["Retroexcavadora"]["rendimiento"]
-    rendimiento_volqueta = EQUIPOS_DB["Volqueta"]["rendimiento"]
+        rh = rendimientos_equipo.get(equipo, 1)
+        cantidad_gal_por_unidad = consumo / rh if rh > 0 else 0
+        valor_unitario = cantidad_gal_por_unidad * precio_gasolina
 
-    cantidad_gal_retro = consumo_retro / rendimiento_retro
-    cantidad_gal_volqueta = consumo_volqueta / rendimiento_volqueta
-
-    valor_unitario_retro = cantidad_gal_retro * precio_gasolina
-    valor_unitario_volqueta = cantidad_gal_volqueta * precio_gasolina
-
-    filas_materiales.append({
-        "DESCRIPCIÓN": "GASOLINA RETROEXCAVADORA",
-        "UNIDAD": "GL",
-        f"CANTIDAD POR {unidad}": cantidad_gal_retro,
-        "PRECIO UNITARIO": precio_gasolina,
-        "VALOR UNITARIO": valor_unitario_retro,
-        "VALOR PARCIAL": valor_unitario_retro * cantidad_obra
-    })
-
-    filas_materiales.append({
-        "DESCRIPCIÓN": "GASOLINA VOLQUETA",
-        "UNIDAD": "GL",
-        f"CANTIDAD POR {unidad}": cantidad_gal_volqueta,
-        "PRECIO UNITARIO": precio_gasolina,
-        "VALOR UNITARIO": valor_unitario_volqueta,
-        "VALOR PARCIAL": valor_unitario_volqueta * cantidad_obra
-    })
+        if consumo > 0:
+            filas_materiales.append({
+                "DESCRIPCIÓN": f"GASOLINA {equipo.upper()}",
+                "UNIDAD": "GL",
+                f"CANTIDAD POR {unidad}": cantidad_gal_por_unidad,
+                "PRECIO UNITARIO": precio_gasolina,
+                "VALOR UNITARIO": valor_unitario,
+                "VALOR PARCIAL": valor_unitario * cantidad_obra
+            })
 
 else:
     for material, datos in data_apu["materiales"].items():
         m1, m2 = st.columns(2)
 
         with m1:
-            cantidad_mat = st.number_input(
-                f"Cantidad {material} por {unidad}",
-                value=float(datos["cantidad"]),
-                min_value=0.0,
-                key=f"cant_{material}"
-            )
-
+            cantidad_mat = st.number_input(f"Cantidad {material} por {unidad}", value=float(datos["cantidad"]), min_value=0.0, key=f"cant_{material}")
         with m2:
-            precio_mat = st.number_input(
-                f"Precio unitario {material}",
-                value=float(datos["precio"]),
-                min_value=0.0,
-                key=f"precio_{material}"
-            )
+            precio_mat = st.number_input(f"Precio unitario {material}", value=float(datos["precio"]), min_value=0.0, key=f"precio_{material}")
 
         valor_unitario = cantidad_mat * precio_mat
 
@@ -430,9 +377,8 @@ if apu == "Excavación mecánica":
 
     cantidad_transportada = volumen_expansion
     m3_km = cantidad_transportada * distancia_botadero
-
-    valor_transporte_material = m3_km * tarifa_transporte
-    valor_vertimiento = cantidad_transportada * tarifa_vertimiento
+    valor_transporte = m3_km * tarifa_transporte
+    valor_botadero = cantidad_transportada * tarifa_vertimiento
 
     filas_transporte.append({
         "ÍTEM": "MATERIAL EXCAVADO",
@@ -440,7 +386,7 @@ if apu == "Excavación mecánica":
         "CANTIDAD": cantidad_transportada,
         "M3_KM": m3_km,
         "TARIFA": tarifa_transporte,
-        "VALOR PARCIAL": valor_transporte_material
+        "VALOR PARCIAL": valor_transporte
     })
 
     filas_transporte.append({
@@ -449,7 +395,7 @@ if apu == "Excavación mecánica":
         "CANTIDAD": cantidad_transportada,
         "M3_KM": "",
         "TARIFA": tarifa_vertimiento,
-        "VALOR PARCIAL": valor_vertimiento
+        "VALOR PARCIAL": valor_botadero
     })
 
 transporte_df = pd.DataFrame(filas_transporte)
@@ -460,32 +406,21 @@ st.divider()
 
 st.subheader("5. MANO DE OBRA")
 
+rendimiento_base = min([rendimientos_equipo[e] for e in rendimientos_equipo]) if rendimientos_equipo else 1
+
 filas_mano = []
 
 for trabajador in data_apu["mano"]:
     mo1, mo2 = st.columns(2)
 
     with mo1:
-        cantidad_trabajadores = st.number_input(
-            f"Cantidad {trabajador}",
-            value=1.0,
-            min_value=0.0,
-            step=1.0,
-            key=f"cant_{trabajador}"
-        )
-
+        cantidad_trabajadores = st.number_input(f"Cantidad {trabajador}", value=1.0, min_value=0.0, step=1.0, key=f"cant_{trabajador}")
     with mo2:
-        jornal = st.number_input(
-            f"Jornal diario {trabajador}",
-            value=float(MANO_OBRA_DB[trabajador]),
-            min_value=0.0,
-            step=1000.0,
-            key=f"jornal_{trabajador}"
-        )
+        jornal = st.number_input(f"Jornal diario {trabajador}", value=float(MANO_OBRA_DB[trabajador]), min_value=0.0, step=1000.0, key=f"jornal_{trabajador}")
 
     jornal_total = jornal * PRESTACIONES_SOCIALES
     costo_hora = jornal_total / JORNADA_HORAS
-    valor_unitario_mano = (cantidad_trabajadores * costo_hora) / rendimiento_base
+    valor_unitario_mano = (cantidad_trabajadores * costo_hora) / rendimiento_base if rendimiento_base > 0 else 0
 
     filas_mano.append({
         "TRABAJADOR": trabajador.upper(),
@@ -511,7 +446,6 @@ for punto in data_apu["checklist"]:
     checks.append(st.checkbox(punto))
 
 cumplimiento = (sum(checks) / len(checks)) * 100 if checks else 0
-
 st.progress(cumplimiento / 100)
 st.info(f"Cumplimiento de lista de chequeo: {cumplimiento:.1f}%")
 
@@ -528,8 +462,9 @@ aiu_unitario = costo_directo_unitario * (aiu_porcentaje / 100)
 valor_unitario_total = costo_directo_unitario + aiu_unitario
 valor_total_item = valor_unitario_total * cantidad_obra
 
-r1, r2, r3, r4 = st.columns(4)
+st.subheader("7. RESUMEN")
 
+r1, r2, r3, r4 = st.columns(4)
 r1.metric("Costo directo unitario", pesos(costo_directo_unitario))
 r2.metric("AIU unitario", pesos(aiu_unitario))
 r3.metric("Valor unitario total", pesos(valor_unitario_total))
@@ -537,7 +472,7 @@ r4.metric("Valor total del ítem", pesos(valor_total_item))
 
 st.divider()
 
-st.subheader("7. TABLA FINAL DEL PRESUPUESTO APU")
+st.subheader("8. TABLA FINAL DEL PRESUPUESTO APU")
 
 html = f"""
 <style>
@@ -571,30 +506,31 @@ html = f"""
 </style>
 
 <table class="apu-table">
-<tr><td colspan="8"><b>ANÁLISIS DE PRECIOS UNITARIOS APU</b></td></tr>
-<tr><td>PROYECTO</td><td colspan="7">{proyecto}</td></tr>
-<tr><td>INTEGRANTES</td><td colspan="7">{integrantes}</td></tr>
-<tr><td>AÑO</td><td colspan="7">{anio}</td></tr>
-<tr><td>CAPÍTULO</td><td colspan="7">{capitulo}</td></tr>
-<tr><td>ÍTEM</td><td colspan="7">{item}</td></tr>
-<tr><td>UNIDAD</td><td colspan="7">{unidad}</td></tr>
-<tr><td>CANTIDAD DE OBRA</td><td colspan="7">{formato(cantidad_obra, 3)} {unidad}</td></tr>
+<tr><td colspan="11"><b>ANÁLISIS DE PRECIOS UNITARIOS APU</b></td></tr>
+<tr><td>PROYECTO</td><td colspan="10">{proyecto}</td></tr>
+<tr><td>INTEGRANTES</td><td colspan="10">{integrantes}</td></tr>
+<tr><td>AÑO</td><td colspan="10">{anio}</td></tr>
+<tr><td>CAPÍTULO</td><td colspan="10">{capitulo}</td></tr>
+<tr><td>ÍTEM</td><td colspan="10">{item}</td></tr>
+<tr><td>UNIDAD</td><td colspan="10">{unidad}</td></tr>
+<tr><td>CANTIDAD DE OBRA</td><td colspan="10">{formato(cantidad_obra, 3)} {unidad}</td></tr>
 """
 
 if apu == "Excavación mecánica":
     html += f"""
-    <tr><td colspan="8" class="section">PARÁMETROS DE EXCAVACIÓN</td></tr>
-    <tr><td>Área perfil trapezoidal</td><td colspan="3">{formato(area_perfil, 3)}</td><td colspan="4">m²</td></tr>
-    <tr><td>Volumen excavación banco</td><td colspan="3">{formato(volumen_excavacion, 3)}</td><td colspan="4">m³</td></tr>
-    <tr><td>Factor expansión</td><td colspan="3">{formato(factor_expansion, 3)}</td><td colspan="4">-</td></tr>
-    <tr><td>Volumen expansión transporte</td><td colspan="3">{formato(volumen_expansion, 3)}</td><td colspan="4">m³</td></tr>
+    <tr><td colspan="11" class="section">PARÁMETROS DE EXCAVACIÓN</td></tr>
+    <tr><td>Área perfil trapezoidal</td><td colspan="5">{formato(area_perfil, 3)}</td><td colspan="5">m²</td></tr>
+    <tr><td>Volumen excavación banco</td><td colspan="5">{formato(volumen_excavacion, 3)}</td><td colspan="5">m³</td></tr>
+    <tr><td>Factor expansión</td><td colspan="5">{formato(factor_expansion, 3)}</td><td colspan="5">-</td></tr>
+    <tr><td>Volumen expansión transporte</td><td colspan="5">{formato(volumen_expansion, 3)}</td><td colspan="5">m³</td></tr>
     """
 
 html += """
-<tr><td colspan="8" class="section">1. EQUIPO</td></tr>
+<tr><td colspan="11" class="section">1. EQUIPO</td></tr>
 <tr>
-<th>DESCRIPCIÓN</th><th>TIPO</th><th>UND</th><th>CANTIDAD</th>
-<th>TARIFA</th><th>RENDIMIENTO</th><th>VALOR UNITARIO</th><th>VALOR PARCIAL</th>
+<th>DESCRIPCIÓN</th><th>TIPO</th><th>UND</th><th>CANT.</th>
+<th>TARIFA</th><th>TIEMPO CICLO</th><th>CAPACIDAD</th>
+<th>REND. HORA</th><th>REND. DÍA</th><th>V. UNITARIO</th><th>V. PARCIAL</th>
 </tr>
 """
 
@@ -606,19 +542,22 @@ for _, row in equipo_df.iterrows():
     <td>{row['UND']}</td>
     <td>{formato(row['CANTIDAD'], 2)}</td>
     <td>{pesos(row['TARIFA'])}</td>
-    <td>{formato(row['RENDIMIENTO'], 2)} {unidad}/h</td>
+    <td>{formato(row['TIEMPO CICLO'], 2)} min</td>
+    <td>{formato(row['CAPACIDAD'], 2)} {unidad}</td>
+    <td>{formato(row['RENDIMIENTO HORA'], 2)} {unidad}/h</td>
+    <td>{formato(row['RENDIMIENTO DÍA'], 2)} {unidad}/día</td>
     <td>{pesos(row['VALOR UNITARIO'])}</td>
     <td>{pesos(row['VALOR PARCIAL'])}</td>
     </tr>
     """
 
 html += f"""
-<tr><td colspan="7" class="subtotal">Sub - Total Equipo</td><td>{pesos(subtotal_equipo_unitario)}</td></tr>
+<tr><td colspan="10" class="subtotal">Sub - Total Equipo</td><td>{pesos(subtotal_equipo_unitario)}</td></tr>
 
-<tr><td colspan="8" class="section">2. MATERIALES DE OBRA</td></tr>
+<tr><td colspan="11" class="section">2. MATERIALES DE OBRA</td></tr>
 <tr>
-<th>DESCRIPCIÓN</th><th colspan="2">UNIDAD</th><th colspan="2">CANTIDAD</th>
-<th>PRECIO UNITARIO</th><th>VALOR UNITARIO</th><th>VALOR PARCIAL</th>
+<th>DESCRIPCIÓN</th><th colspan="2">UNIDAD</th><th colspan="3">CANTIDAD</th>
+<th colspan="2">PRECIO UNITARIO</th><th>VALOR UNITARIO</th><th colspan="2">VALOR PARCIAL</th>
 </tr>
 """
 
@@ -627,22 +566,22 @@ for _, row in materiales_df.iterrows():
     <tr>
     <td>{row['DESCRIPCIÓN']}</td>
     <td colspan="2">{row['UNIDAD']}</td>
-    <td colspan="2">{formato(row[f'CANTIDAD POR {unidad}'], 4)}</td>
-    <td>{pesos(row['PRECIO UNITARIO'])}</td>
+    <td colspan="3">{formato(row[f'CANTIDAD POR {unidad}'], 4)}</td>
+    <td colspan="2">{pesos(row['PRECIO UNITARIO'])}</td>
     <td>{pesos(row['VALOR UNITARIO'])}</td>
-    <td>{pesos(row['VALOR PARCIAL'])}</td>
+    <td colspan="2">{pesos(row['VALOR PARCIAL'])}</td>
     </tr>
     """
 
 html += f"""
-<tr><td colspan="7" class="subtotal">Sub - Total Materiales de obra</td><td>{pesos(subtotal_materiales_unitario)}</td></tr>
+<tr><td colspan="10" class="subtotal">Sub - Total Materiales</td><td>{pesos(subtotal_materiales_unitario)}</td></tr>
 """
 
 html += """
-<tr><td colspan="8" class="section">3. TRANSPORTE</td></tr>
+<tr><td colspan="11" class="section">3. TRANSPORTE</td></tr>
 <tr>
 <th>ÍTEM</th><th>DISTANCIA</th><th>CANTIDAD</th><th>m³-km</th>
-<th colspan="2">TARIFA</th><th colspan="2">VALOR PARCIAL</th>
+<th colspan="3">TARIFA</th><th colspan="4">VALOR PARCIAL</th>
 </tr>
 """
 
@@ -654,23 +593,21 @@ if not transporte_df.empty:
         <td>{row['DISTANCIA']}</td>
         <td>{formato(row['CANTIDAD'], 3)}</td>
         <td>{row['M3_KM']}</td>
-        <td colspan="2">{pesos(row['TARIFA'])}</td>
-        <td colspan="2">{pesos(row['VALOR PARCIAL'])}</td>
+        <td colspan="3">{pesos(row['TARIFA'])}</td>
+        <td colspan="4">{pesos(row['VALOR PARCIAL'])}</td>
         </tr>
         """
 else:
-    html += """
-    <tr><td colspan="8">No aplica transporte directo.</td></tr>
-    """
+    html += """<tr><td colspan="11">No aplica transporte directo.</td></tr>"""
 
 html += f"""
-<tr><td colspan="7" class="subtotal">Sub - Total Transporte</td><td>{pesos(subtotal_transporte_unitario)}</td></tr>
+<tr><td colspan="10" class="subtotal">Sub - Total Transporte</td><td>{pesos(subtotal_transporte_unitario)}</td></tr>
 
-<tr><td colspan="8" class="section">4. MANO DE OBRA</td></tr>
+<tr><td colspan="11" class="section">4. MANO DE OBRA</td></tr>
 <tr>
-<th>TRABAJADOR</th><th>CANTIDAD</th><th>JORNAL</th>
-<th>PRESTACIONES</th><th>JORNAL TOTAL</th>
-<th>COSTO HORA</th><th>RENDIMIENTO</th><th>VALOR UNITARIO</th>
+<th>TRABAJADOR</th><th>CANTIDAD</th><th>JORNAL</th><th>PRESTACIONES</th>
+<th>JORNAL TOTAL</th><th>COSTO HORA</th><th>RENDIMIENTO</th>
+<th colspan="2">VALOR UNITARIO</th><th colspan="2">VALOR PARCIAL</th>
 </tr>
 """
 
@@ -684,63 +621,18 @@ for _, row in mano_df.iterrows():
     <td>{pesos(row['JORNAL TOTAL'])}</td>
     <td>{pesos(row['COSTO HORA'])}</td>
     <td>{formato(row['RENDIMIENTO'], 2)} {unidad}/h</td>
-    <td>{pesos(row['VALOR UNITARIO'])}</td>
+    <td colspan="2">{pesos(row['VALOR UNITARIO'])}</td>
+    <td colspan="2">{pesos(row['VALOR PARCIAL'])}</td>
     </tr>
     """
 
 html += f"""
-<tr><td colspan="7" class="subtotal">Sub - Total Mano de obra</td><td>{pesos(subtotal_mano_unitario)}</td></tr>
-<tr><td colspan="7" class="subtotal">Costo Directo Unitario</td><td>{pesos(costo_directo_unitario)}</td></tr>
-<tr><td colspan="7" class="subtotal">AIU Unitario ({aiu_porcentaje}%)</td><td>{pesos(aiu_unitario)}</td></tr>
-<tr class="total"><td colspan="7">VALOR UNITARIO TOTAL</td><td>{pesos(valor_unitario_total)}</td></tr>
-<tr class="total"><td colspan="7">VALOR TOTAL DEL ÍTEM</td><td>{pesos(valor_total_item)}</td></tr>
+<tr><td colspan="10" class="subtotal">Sub - Total Mano de obra</td><td>{pesos(subtotal_mano_unitario)}</td></tr>
+<tr><td colspan="10" class="subtotal">Costo Directo Unitario</td><td>{pesos(costo_directo_unitario)}</td></tr>
+<tr><td colspan="10" class="subtotal">AIU Unitario ({aiu_porcentaje}%)</td><td>{pesos(aiu_unitario)}</td></tr>
+<tr class="total"><td colspan="10">VALOR UNITARIO TOTAL</td><td>{pesos(valor_unitario_total)}</td></tr>
+<tr class="total"><td colspan="10">VALOR TOTAL DEL ÍTEM</td><td>{pesos(valor_total_item)}</td></tr>
 </table>
 """
 
 st.markdown(html, unsafe_allow_html=True)
-
-tabla_exportar = pd.DataFrame({
-    "Concepto": [
-        "Proyecto",
-        "Integrantes",
-        "Capítulo",
-        "Ítem",
-        "Unidad",
-        "Cantidad de obra",
-        "Subtotal equipo unitario",
-        "Subtotal materiales unitario",
-        "Subtotal transporte unitario",
-        "Subtotal mano de obra unitario",
-        "Costo directo unitario",
-        "AIU unitario",
-        "Valor unitario total",
-        "Valor total del ítem",
-        "Cumplimiento checklist (%)"
-    ],
-    "Valor": [
-        proyecto,
-        integrantes,
-        capitulo,
-        item,
-        unidad,
-        cantidad_obra,
-        subtotal_equipo_unitario,
-        subtotal_materiales_unitario,
-        subtotal_transporte_unitario,
-        subtotal_mano_unitario,
-        costo_directo_unitario,
-        aiu_unitario,
-        valor_unitario_total,
-        valor_total_item,
-        cumplimiento
-    ]
-})
-
-csv = csv_download(tabla_exportar)
-
-st.download_button(
-    label="📥 Descargar resumen del APU en CSV",
-    data=csv,
-    file_name=f"APU_{apu.replace(' ', '_')}.csv",
-    mime="text/csv"
-)
