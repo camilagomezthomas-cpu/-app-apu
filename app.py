@@ -1,528 +1,650 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import streamlit as st
+import pandas as pd
 
-class ApuPresupuestoWidget extends StatefulWidget {
-  const ApuPresupuestoWidget({
-    super.key,
-    this.width,
-    this.height,
-  });
+st.set_page_config(
+    page_title="APU Presupuestos",
+    page_icon="📊",
+    layout="wide"
+)
 
-  final double? width;
-  final double? height;
+# =====================================================
+# DATOS GENERALES DEL SISTEMA
+# =====================================================
 
-  @override
-  State<ApuPresupuestoWidget> createState() => _ApuPresupuestoWidgetState();
+JORNADA_HORAS = 8
+PRECIO_GASOLINA = 10984
+PRESTACIONES_SOCIALES = 1.65
+
+# =====================================================
+# BASE DE DATOS DE MAQUINARIA
+# =====================================================
+
+MAQUINARIA_DB = {
+    "Retroexcavadora": {
+        "tipo": "75 HP",
+        "unidad": "m³",
+        "tarifa_hora": 90000,
+        "tiempo_min": 4.7,
+        "capacidad_m3": 6.5,
+        "consumo_gal_hora": 5.0,
+    },
+    "Volqueta": {
+        "tipo": "6.5 m³",
+        "unidad": "m³",
+        "tarifa_hora": 75000,
+        "tiempo_min": 4.7,
+        "capacidad_m3": 6.5,
+        "consumo_gal_hora": 4.0,
+    },
+    "Excavadora hidráulica": {
+        "tipo": "120 HP",
+        "unidad": "m³",
+        "tarifa_hora": 180000,
+        "tiempo_min": 3.5,
+        "capacidad_m3": 1.0,
+        "consumo_gal_hora": 6.5,
+    },
+    "Bulldozer": {
+        "tipo": "D6",
+        "unidad": "m³",
+        "tarifa_hora": 160000,
+        "tiempo_min": 5.5,
+        "capacidad_m3": 8.0,
+        "consumo_gal_hora": 7.0,
+    },
+    "Motoniveladora": {
+        "tipo": "120 HP",
+        "unidad": "m³",
+        "tarifa_hora": 140000,
+        "tiempo_min": 6.0,
+        "capacidad_m3": 7.0,
+        "consumo_gal_hora": 5.5,
+    },
+    "Cargador frontal": {
+        "tipo": "2.5 m³",
+        "unidad": "m³",
+        "tarifa_hora": 130000,
+        "tiempo_min": 4.0,
+        "capacidad_m3": 2.5,
+        "consumo_gal_hora": 5.8,
+    },
+    "Compactador": {
+        "tipo": "Rodillo",
+        "unidad": "m³",
+        "tarifa_hora": 110000,
+        "tiempo_min": 6.0,
+        "capacidad_m3": 5.0,
+        "consumo_gal_hora": 4.2,
+    },
+    "Motobomba": {
+        "tipo": "-",
+        "unidad": "DÍA",
+        "tarifa_hora": 95000,
+        "tiempo_min": 60,
+        "capacidad_m3": 1,
+        "consumo_gal_hora": 0,
+    },
 }
 
-class _ApuPresupuestoWidgetState extends State<ApuPresupuestoWidget> {
-  static const double jornadaHoras = 8.0;
-  static const double prestacionesSociales = 1.65;
-  static const double herramientaMenorPct = 0.05;
+# =====================================================
+# BASE DE DATOS MANO DE OBRA
+# =====================================================
 
-  final _money = NumberFormat.currency(locale: 'es_CO', symbol: r'$ ', decimalDigits: 2);
-  final _num = NumberFormat('#,##0.###', 'es_CO');
+MANO_OBRA_DB = {
+    "Oficial": 100000,
+    "Ayudante": 71428.57,
+    "Obrero": 70000,
+    "Operador retroexcavadora": 115909.09,
+    "Operador volqueta": 127272.73,
+    "Operador excavadora": 145454.55,
+    "Operador motobomba": 71428.57,
+    "Topógrafo": 107142.86,
+    "Cadenero": 83928.57,
+    "Ingeniero residente": 250000,
+    "Maestro de obra": 140000,
+}
 
-  String proyecto = 'Proyecto de obra civil';
-  String capitulo = 'APU - Presupuesto';
-  String actividad = 'Excavación';
-  double cantidadObra = 1.0;
-  bool calcularGeometria = false;
-  bool incluirTransporte = true;
+# =====================================================
+# FUNCIONES
+# =====================================================
 
-  double baseMenor = 1.80;
-  double baseMayor = 2.80;
-  double profundidad = 1.50;
-  double longitud = 50.0;
-  double factorExpansion = 1.25;
+def pesos(valor):
+    return f"$ {float(valor):,.2f}"
 
-  double distanciaBotadero = 15.0;
-  double tarifaTransporte = 1500.0;
-  double tarifaVertimiento = 80000.0;
+def rendimiento_hora(tiempo_min, capacidad):
+    if tiempo_min <= 0:
+        return 0
+    return (60 * capacidad) / tiempo_min
 
-  double rendimientoCuadrilla = 20.0;
-  double adminPct = 10.0;
-  double imprevistosPct = 5.0;
-  double utilidadPct = 5.0;
+def rendimiento_dia(rh):
+    return rh * JORNADA_HORAS
 
-  final Map<String, List<bool>> checklistEstado = {};
+def formato(valor, decimales=2):
+    try:
+        return f"{float(valor):,.{decimales}f}"
+    except:
+        return valor
 
-  late Map<String, ApuActividad> actividades;
+# =====================================================
+# INTERFAZ
+# =====================================================
 
-  @override
-  void initState() {
-    super.initState();
-    actividades = _crearActividades();
-    for (final key in actividades.keys) {
-      checklistEstado[key] = List<bool>.filled(actividades[key]!.checklist.length, false);
+st.title("📊 MATRIZ APU - SISTEMA DE PRESUPUESTOS")
+
+st.sidebar.header("Menú de APU")
+
+apu = st.sidebar.selectbox(
+    "Seleccione el ítem",
+    [
+        "1.1 Excavación mecánica en tierra",
+        "1.2 Excavación mecánica en arena",
+        "1.3 Excavación en roca",
+        "1.4 Excavación manual",
+        "1.5 Entibado de tubería",
+        "1.6 Tubería"
+    ]
+)
+
+# =====================================================
+# DATOS DEL PROYECTO
+# =====================================================
+
+st.subheader("DATOS DEL PROYECTO")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    proyecto = st.text_input(
+        "Proyecto",
+        "UNIVERSIDAD MILITAR NUEVA GRANADA INSTALACIÓN DE TUBERÍA"
+    )
+    contrato = st.text_input(
+        "Contrato",
+        "CAMILA GÓMEZ, CHAROL REMÍREZ"
+    )
+    anio = st.number_input("Año", value=2026)
+
+with col2:
+    capitulo = st.text_input("Capítulo", "INSTALACIÓN DE TUBERÍA")
+    item = st.text_input("Ítem", apu)
+    unidad = st.text_input("Unidad", "m³")
+
+st.divider()
+
+# =====================================================
+# PARÁMETROS
+# =====================================================
+
+st.subheader("PARÁMETROS DE EXCAVACIÓN Y ENTIBADO")
+
+col3, col4, col5 = st.columns(3)
+
+with col3:
+    base_menor = st.number_input("Base menor B1 (m)", value=1.8)
+    base_mayor = st.number_input("Base mayor B2 (m)", value=2.8)
+
+with col4:
+    longitud_tramo = st.number_input("Longitud del tramo L (m)", value=50.0)
+    profundidad = st.number_input("Profundidad / altura H (m)", value=1.5)
+
+with col5:
+    factor_expansion = st.number_input("Factor de expansión", value=1.25)
+    rendimiento_excavacion = st.number_input("Rendimiento excavación (m³/h)", value=1.0)
+    capacidad_volqueta_general = st.number_input("Capacidad volqueta general (m³)", value=6.5)
+
+area_perfil = 0.5 * ((base_menor + base_mayor) * longitud_tramo + profundidad * profundidad)
+area_entibado = area_perfil * 2
+volumen_excavacion = ((area_perfil - profundidad * profundidad) * 1.1) + profundidad ** 3
+volumen_expansion = volumen_excavacion * factor_expansion
+viajes_volqueta = volumen_expansion / capacidad_volqueta_general if capacidad_volqueta_general > 0 else 0
+
+parametros_df = pd.DataFrame({
+    "PARÁMETRO": [
+        "Área en perfil",
+        "Área de entibado",
+        "Volumen de excavación",
+        "Volumen de expansión",
+        "Viajes equivalentes de volqueta",
+        "Rendimiento excavación"
+    ],
+    "VALOR": [
+        area_perfil,
+        area_entibado,
+        volumen_excavacion,
+        volumen_expansion,
+        viajes_volqueta,
+        rendimiento_excavacion
+    ],
+    "UNIDAD": [
+        "m²",
+        "m²",
+        "m³",
+        "m³",
+        "viajes",
+        "m³/h"
+    ]
+})
+
+st.dataframe(parametros_df, use_container_width=True)
+
+st.divider()
+
+# =====================================================
+# EQUIPO
+# =====================================================
+
+st.subheader("1. EQUIPO")
+
+maquinas_seleccionadas = st.multiselect(
+    "Seleccione maquinaria/equipos",
+    list(MAQUINARIA_DB.keys()),
+    default=["Retroexcavadora", "Volqueta"]
+)
+
+filas_equipo = []
+
+for maquina in maquinas_seleccionadas:
+    datos = MAQUINARIA_DB[maquina]
+
+    st.markdown(f"### {maquina}")
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        tarifa = st.number_input(
+            f"Tarifa {maquina}",
+            value=float(datos["tarifa_hora"]),
+            key=f"tarifa_{maquina}"
+        )
+
+    with c2:
+        tiempo_min = st.number_input(
+            f"Tiempo ciclo {maquina} (min)",
+            value=float(datos["tiempo_min"]),
+            key=f"tiempo_{maquina}"
+        )
+
+    with c3:
+        capacidad = st.number_input(
+            f"Capacidad {maquina} (m³)",
+            value=float(datos["capacidad_m3"]),
+            key=f"capacidad_{maquina}"
+        )
+
+    with c4:
+        cantidad_equipo = st.number_input(
+            f"Cantidad de {maquina}",
+            value=1.0,
+            min_value=0.0,
+            key=f"cantidad_equipo_{maquina}"
+        )
+
+    rh = rendimiento_hora(tiempo_min, capacidad)
+    rd = rendimiento_dia(rh)
+
+    if "manual" in apu.lower() or "entibado" in apu.lower():
+        rendimiento_usado = rendimiento_excavacion * JORNADA_HORAS
+    else:
+        rendimiento_usado = rd
+
+    valor_parcial = (
+        cantidad_equipo * tarifa * JORNADA_HORAS
+    ) / rendimiento_usado if rendimiento_usado > 0 else 0
+
+    filas_equipo.append({
+        "DESCRIPCIÓN": maquina.upper(),
+        "TIPO": datos["tipo"],
+        "UND": datos["unidad"],
+        "CANTIDAD": cantidad_equipo,
+        "TARIFA": tarifa,
+        "RENDIMIENTO": rendimiento_usado,
+        "VALOR PARCIAL": valor_parcial
+    })
+
+equipo_df = pd.DataFrame(filas_equipo)
+subtotal_equipo = equipo_df["VALOR PARCIAL"].sum() if not equipo_df.empty else 0
+
+st.dataframe(equipo_df, use_container_width=True)
+st.success(f"Sub - Total Equipo: {pesos(subtotal_equipo)}")
+
+st.divider()
+
+# =====================================================
+# MATERIALES
+# =====================================================
+
+st.subheader("2. MATERIALES DE OBRA")
+
+filas_materiales = []
+
+if "entibado" in apu.lower():
+    materiales_entibado = {
+        "Puntales (1x10\")": 59900,
+        "Largueros (1x10\")": 59900,
+        "Codales (2x3\")": 28900,
+        "Puntilla cabeza 2-1/2\" 500g": 5100,
     }
-  }
 
-  Map<String, ApuActividad> _crearActividades() {
-    return {
-      'Excavación': ApuActividad(
-        unidad: 'm³',
-        descripcion: 'Excavación mecánica o manual con cargue, retiro y disposición.',
-        checklist: const [
-          'Verificar replanteo y niveles antes de iniciar.',
-          'Confirmar ancho, profundidad y longitud de excavación según planos.',
-          'Revisar estabilidad de taludes o necesidad de entibado.',
-          'Verificar uso de EPP y señalización del área.',
-          'Controlar cargue, retiro y disposición del material excavado.',
-          'Registrar volumen excavado y viajes al botadero.',
-          'Validar limpieza final y cotas de fondo.',
-        ],
-        materiales: const [],
-        manoObra: [
-          ManoObraItem('Operador retroexcavadora', 1, 127272.73),
-          ManoObraItem('Ayudante', 1, 71428.57),
-        ],
-        equipos: [
-          EquipoItem('Retroexcavadora', '75 HP', 1, 90000, 8.30),
-          EquipoItem('Volqueta', '6.5 m³', 1, 75000, 6.50),
-        ],
-      ),
-      'Zapata': ApuActividad(
-        unidad: 'm³',
-        descripcion: 'Construcción de zapata en concreto reforzado.',
-        checklist: const [
-          'Verificar dimensiones de excavación y cota de desplante.',
-          'Confirmar solado, limpieza y nivelación del fondo.',
-          'Revisar acero de refuerzo, traslapos y recubrimiento.',
-          'Verificar formaleta, alineamiento y estabilidad.',
-          'Confirmar resistencia del concreto especificada.',
-          'Controlar vibrado, acabado y curado.',
-          'Registrar volumen fundido y evidencia fotográfica.',
-        ],
-        materiales: [
-          MaterialItem('Concreto premezclado', 'm³', 1.05, 430000),
-          MaterialItem('Acero de refuerzo', 'kg', 95, 6200),
-          MaterialItem('Alambre negro', 'kg', 1.2, 6500),
-        ],
-        manoObra: [
-          ManoObraItem('Oficial', 1, 100000),
-          ManoObraItem('Ayudante', 2, 71428.57),
-        ],
-        equipos: [EquipoItem('Vibrador de concreto', 'Eléctrico', 1, 25000, 12.0)],
-      ),
-      'Vigas': ApuActividad(
-        unidad: 'm³',
-        descripcion: 'Construcción de vigas en concreto reforzado.',
-        checklist: const [
-          'Verificar niveles, ejes y dimensiones de viga.',
-          'Revisar formaleta, apuntalamiento y desmoldante.',
-          'Confirmar acero longitudinal y estribos según plano.',
-          'Verificar recubrimientos y separadores.',
-          'Controlar vaciado, vibrado y acabado.',
-          'Realizar curado y protección del elemento.',
-          'Registrar volumen, lote de concreto y observaciones.',
-        ],
-        materiales: [
-          MaterialItem('Concreto premezclado', 'm³', 1.05, 430000),
-          MaterialItem('Acero de refuerzo', 'kg', 120, 6200),
-          MaterialItem('Formaleta', 'm²', 5.0, 45000),
-          MaterialItem('Alambre negro', 'kg', 1.5, 6500),
-        ],
-        manoObra: [
-          ManoObraItem('Oficial', 1, 100000),
-          ManoObraItem('Ayudante', 2, 71428.57),
-        ],
-        equipos: [EquipoItem('Vibrador de concreto', 'Eléctrico', 1, 25000, 10.0)],
-      ),
-      'Losa aligerada': ApuActividad(
-        unidad: 'm²',
-        descripcion: 'Construcción de losa aligerada por área de placa.',
-        checklist: const [
-          'Verificar apuntalamiento, camillas y seguridad inferior.',
-          'Confirmar distribución de aligerantes o casetones.',
-          'Revisar acero superior, inferior, nervios y refuerzos negativos.',
-          'Verificar instalaciones embebidas antes del vaciado.',
-          'Controlar espesor de losa, vibrado y acabado.',
-          'Garantizar curado y tiempos mínimos de desencofrado.',
-          'Registrar área ejecutada y control de calidad.',
-        ],
-        materiales: [
-          MaterialItem('Concreto premezclado', 'm³', 0.12, 430000),
-          MaterialItem('Acero de refuerzo', 'kg', 18, 6200),
-          MaterialItem('Aligerante', 'und', 1.0, 18000),
-          MaterialItem('Formaleta y puntales', 'm²', 1.0, 50000),
-        ],
-        manoObra: [
-          ManoObraItem('Oficial', 1, 100000),
-          ManoObraItem('Ayudante', 2, 71428.57),
-        ],
-        equipos: [EquipoItem('Vibrador de concreto', 'Eléctrico', 1, 25000, 35.0)],
-      ),
-      'Estructura metálica': ApuActividad(
-        unidad: 'kg',
-        descripcion: 'Suministro, fabricación, montaje y pintura de estructura metálica.',
-        checklist: const [
-          'Verificar planos de taller y cantidades de acero.',
-          'Revisar certificados del material.',
-          'Controlar cortes, perforaciones y soldaduras.',
-          'Verificar alineamiento, plomo y nivelación durante montaje.',
-          'Revisar torque de pernos y calidad de soldadura.',
-          'Aplicar anticorrosivo o pintura especificada.',
-          'Registrar kg instalados y liberación de calidad.',
-        ],
-        materiales: [
-          MaterialItem('Acero estructural', 'kg', 1.05, 7200),
-          MaterialItem('Soldadura', 'kg', 0.025, 18000),
-          MaterialItem('Pintura anticorrosiva', 'kg', 0.015, 22000),
-          MaterialItem('Pernos y anclajes', 'kg', 0.03, 15000),
-        ],
-        manoObra: [
-          ManoObraItem('Soldador', 1, 130000),
-          ManoObraItem('Ayudante', 1, 71428.57),
-          ManoObraItem('Maestro de obra', 0.25, 140000),
-        ],
-        equipos: [
-          EquipoItem('Equipo de soldadura', 'Inversor', 1, 35000, 80.0),
-          EquipoItem('Pulidora', 'Industrial', 1, 15000, 120.0),
-        ],
-      ),
-    };
-  }
+    for material, precio_base in materiales_entibado.items():
+        c1, c2 = st.columns(2)
 
-  double get volumenExcavacion {
-    if (actividad != 'Excavación') return cantidadObra;
-    if (!calcularGeometria) return cantidadObra;
-    final areaPerfil = ((baseMenor + baseMayor) / 2) * profundidad;
-    return areaPerfil * longitud;
-  }
+        with c1:
+            cantidad_mat = st.number_input(
+                f"Cantidad {material}",
+                value=1.0,
+                min_value=0.0,
+                key=f"cant_{material}"
+            )
 
-  double get volumenExpansion => volumenExcavacion * factorExpansion;
+        with c2:
+            precio_mat = st.number_input(
+                f"Precio unitario {material}",
+                value=float(precio_base),
+                min_value=0.0,
+                key=f"precio_{material}"
+            )
 
-  double costoEquipoUnitario(EquipoItem e) {
-    if (e.rendimientoHora <= 0) return 0;
-    return e.cantidad * e.tarifaHora / e.rendimientoHora;
-  }
+        valor_material = cantidad_mat * precio_mat
 
-  double costoMaterialUnitario(MaterialItem m) => m.cantidadPorUnidad * m.precioUnitario;
+        filas_materiales.append({
+            "DESCRIPCIÓN": material.upper(),
+            "UNIDAD": "GLOBAL",
+            "PRECIO UNITARIO": precio_mat,
+            "CANTIDAD": cantidad_mat,
+            "VALOR PARCIAL": valor_material
+        })
 
-  double costoManoObraUnitario(ManoObraItem m) {
-    if (rendimientoCuadrilla <= 0) return 0;
-    return m.cantidad * m.jornal * prestacionesSociales / rendimientoCuadrilla;
-  }
+else:
+    for maquina in maquinas_seleccionadas:
+        datos = MAQUINARIA_DB[maquina]
 
-  List<Map<String, dynamic>> transporteRows() {
-    if (actividad != 'Excavación' || !incluirTransporte || volumenExcavacion <= 0) return [];
-    final cantidadTransportadaPorM3 = volumenExpansion / volumenExcavacion;
-    final m3Km = cantidadTransportadaPorM3 * distanciaBotadero;
-    return [
-      {
-        'item': 'MATERIAL EXCAVADO',
-        'distancia': distanciaBotadero,
-        'cantidad': cantidadTransportadaPorM3,
-        'm3km': m3Km,
-        'tarifa': tarifaTransporte,
-        'valor': m3Km * tarifaTransporte,
-      },
-      {
-        'item': 'BOTADERO',
-        'distancia': null,
-        'cantidad': cantidadTransportadaPorM3,
-        'm3km': null,
-        'tarifa': tarifaVertimiento,
-        'valor': cantidadTransportadaPorM3 * tarifaVertimiento,
-      },
-    ];
-  }
+        consumo = st.number_input(
+            f"Consumo gasolina {maquina} (gal/h)",
+            value=float(datos["consumo_gal_hora"]),
+            min_value=0.0,
+            key=f"consumo_{maquina}"
+        )
 
-  double get subtotalEquipo => actividades[actividad]!.equipos.fold(0, (s, e) => s + costoEquipoUnitario(e));
-  double get subtotalMateriales => actividades[actividad]!.materiales.fold(0, (s, m) => s + costoMaterialUnitario(m));
-  double get subtotalManoObra => actividades[actividad]!.manoObra.fold(0, (s, m) => s + costoManoObraUnitario(m));
-  double get subtotalTransporte => transporteRows().fold(0, (s, r) => s + (r['valor'] as double));
-  double get herramientaMenor => subtotalManoObra * herramientaMenorPct;
-  double get baseAiu => subtotalEquipo + subtotalMateriales + subtotalTransporte + subtotalManoObra + herramientaMenor;
-  double get administracion => baseAiu * adminPct / 100;
-  double get imprevistos => baseAiu * imprevistosPct / 100;
-  double get utilidad => baseAiu * utilidadPct / 100;
-  double get precioUnitario => baseAiu + administracion + imprevistos + utilidad;
-  double get valorTotalItem => precioUnitario * cantidadObra;
+        horas_reales = st.number_input(
+            f"Horas reales de uso {maquina}",
+            value=1.0,
+            min_value=0.0,
+            key=f"horas_{maquina}"
+        )
 
-  @override
-  Widget build(BuildContext context) {
-    final act = actividades[actividad]!;
-    final unidad = act.unidad;
-    final checks = checklistEstado[actividad]!;
-    final cumplimiento = checks.isEmpty ? 0.0 : checks.where((v) => v).length / checks.length;
+        cantidad_gal = consumo * horas_reales
+        valor_material = cantidad_gal * PRECIO_GASOLINA
 
-    return SizedBox(
-      width: widget.width ?? double.infinity,
-      height: widget.height,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _titulo(),
-            _card('1. Datos generales del proyecto', [
-              _textInput('Proyecto', proyecto, (v) => proyecto = v),
-              _textInput('Capítulo', capitulo, (v) => capitulo = v),
-              _dropdownActividad(),
-              _numberInput('Cantidad total de obra ($unidad)', cantidadObra, (v) => cantidadObra = v),
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text('Descripción: ${act.descripcion}\nUnidad de pago del APU: $unidad'),
-              ),
-            ]),
-            if (actividad == 'Excavación') _excavacionCard(),
-            _equipoCard(act, unidad),
-            _materialesCard(act, unidad),
-            _transporteCard(unidad),
-            _manoObraCard(act, unidad),
-            _resumenCard(unidad),
-            _checklistCard(act, checks, cumplimiento),
-            _tablaFinal(act, unidad),
-          ],
-        ),
-      ),
-    );
-  }
+        if consumo > 0:
+            filas_materiales.append({
+                "DESCRIPCIÓN": f"GASOLINA {maquina.upper()}",
+                "UNIDAD": "GL",
+                "PRECIO UNITARIO": PRECIO_GASOLINA,
+                "CANTIDAD": cantidad_gal,
+                "VALOR PARCIAL": valor_material
+            })
 
-  Widget _titulo() => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(color: const Color(0xFF172554), borderRadius: BorderRadius.circular(16)),
-        child: const Text('APU - Presupuestos de Obra Civil', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-      );
+materiales_df = pd.DataFrame(filas_materiales)
+subtotal_materiales = materiales_df["VALOR PARCIAL"].sum() if not materiales_df.empty else 0
 
-  Widget _card(String title, List<Widget> children) => Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(top: 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(blurRadius: 12, color: Color(0x1A000000))]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Wrap(spacing: 12, runSpacing: 12, children: children),
-        ]),
-      );
+st.dataframe(materiales_df, use_container_width=True)
+st.success(f"Sub - Total Materiales de obra: {pesos(subtotal_materiales)}")
 
-  Widget _textInput(String label, String value, Function(String) onChanged) => SizedBox(
-        width: 320,
-        child: TextFormField(
-          initialValue: value,
-          decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-          onChanged: (v) => setState(() => onChanged(v)),
-        ),
-      );
+st.divider()
 
-  Widget _numberInput(String label, double value, Function(double) onChanged) => SizedBox(
-        width: 250,
-        child: TextFormField(
-          initialValue: value.toStringAsFixed(value % 1 == 0 ? 0 : 2),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: label, border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-          onChanged: (v) => setState(() => onChanged(double.tryParse(v.replaceAll(',', '.')) ?? 0)),
-        ),
-      );
+# =====================================================
+# TRANSPORTE
+# =====================================================
 
-  Widget _dropdownActividad() => SizedBox(
-        width: 280,
-        child: DropdownButtonFormField<String>(
-          value: actividad,
-          decoration: InputDecoration(labelText: 'Actividad APU', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-          items: actividades.keys.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: (v) => setState(() {
-            actividad = v ?? actividad;
-            rendimientoCuadrilla = actividad == 'Estructura metálica' ? 350 : 20;
-          }),
-        ),
-      );
+st.subheader("3. TRANSPORTE")
 
-  Widget _excavacionCard() => _card('2. Cálculo de cantidad de excavación', [
-        SizedBox(
-          width: 320,
-          child: SwitchListTile(
-            title: const Text('Calcular por geometría'),
-            value: calcularGeometria,
-            onChanged: (v) => setState(() => calcularGeometria = v),
-          ),
-        ),
-        if (calcularGeometria) ...[
-          _numberInput('Base menor B1 (m)', baseMenor, (v) => baseMenor = v),
-          _numberInput('Base mayor B2 (m)', baseMayor, (v) => baseMayor = v),
-          _numberInput('Profundidad H (m)', profundidad, (v) => profundidad = v),
-          _numberInput('Longitud L (m)', longitud, (v) => longitud = v),
-        ],
-        _numberInput('Factor de expansión', factorExpansion, (v) => factorExpansion = v),
-        SizedBox(
-          width: 320,
-          child: SwitchListTile(
-            title: const Text('Incluir transporte y botadero'),
-            value: incluirTransporte,
-            onChanged: (v) => setState(() => incluirTransporte = v),
-          ),
-        ),
-        _infoBox('Volumen excavación: ${_num.format(volumenExcavacion)} m³\nCantidad transportada automática: ${_num.format(volumenExpansion)} m³'),
-      ]);
+distancia_botadero = st.number_input("Distancia al botadero (km)", value=15.0)
+tarifa_transporte = st.number_input("Tarifa transporte ($/m³-km)", value=1500.0)
+tarifa_vertimiento = st.number_input("Tarifa vertimiento / botadero ($/m³)", value=80000.0)
 
-  Widget _equipoCard(ApuActividad act, String unidad) => _card('3. Equipo - rendimiento real por hora', [
-        _infoBox('Fórmula: costo equipo por $unidad = cantidad × tarifa hora / rendimiento ($unidad/h).'),
-        _table(
-          columns: const ['Equipo', 'Tipo', 'Cant.', 'Tarifa/h', 'Rend.', 'V. unitario'],
-          rows: act.equipos.map((e) => [
-            e.nombre,
-            e.tipo,
-            _num.format(e.cantidad),
-            _money.format(e.tarifaHora),
-            '${_num.format(e.rendimientoHora)} $unidad/h',
-            _money.format(costoEquipoUnitario(e)),
-          ]).toList(),
-        ),
-        Text('Sub-total Equipo / $unidad: ${_money.format(subtotalEquipo)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-      ]);
+cantidad_transporte = st.number_input(
+    "Cantidad transportada (m³)",
+    value=float(volumen_expansion)
+)
 
-  Widget _materialesCard(ApuActividad act, String unidad) => _card('4. Materiales', [
-        if (act.materiales.isEmpty) const Text('Esta actividad no tiene materiales directos registrados.'),
-        if (act.materiales.isNotEmpty)
-          _table(
-            columns: const ['Material', 'Und', 'Cant/und obra', 'Precio', 'V. unitario'],
-            rows: act.materiales.map((m) => [m.nombre, m.unidad, _num.format(m.cantidadPorUnidad), _money.format(m.precioUnitario), _money.format(costoMaterialUnitario(m))]).toList(),
-          ),
-        Text('Sub-total Materiales / $unidad: ${_money.format(subtotalMateriales)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-      ]);
+m3_km = distancia_botadero * cantidad_transporte
+valor_transporte_material = m3_km * tarifa_transporte
+valor_vertimiento = cantidad_transporte * tarifa_vertimiento
+subtotal_transporte = valor_transporte_material + valor_vertimiento
 
-  Widget _transporteCard(String unidad) => _card('5. Transporte y disposición', [
-        if (actividad == 'Excavación' && incluirTransporte) ...[
-          _numberInput('Distancia al botadero (km)', distanciaBotadero, (v) => distanciaBotadero = v),
-          _numberInput(r'Tarifa transporte ($/m³-km)', tarifaTransporte, (v) => tarifaTransporte = v),
-          _numberInput(r'Tarifa botadero ($/m³)', tarifaVertimiento, (v) => tarifaVertimiento = v),
-          _infoBox('No se digita manualmente la cantidad transportada. Sale del volumen de expansión: ${_num.format(volumenExpansion)} m³.'),
-          _table(
-            columns: const ['Ítem', 'Distancia', 'Cantidad', 'm³-km', 'Tarifa', 'V. unitario'],
-            rows: transporteRows().map((r) => [
-              r['item'].toString(),
-              r['distancia'] == null ? '-' : _num.format(r['distancia']),
-              _num.format(r['cantidad']),
-              r['m3km'] == null ? '-' : _num.format(r['m3km']),
-              _money.format(r['tarifa']),
-              _money.format(r['valor']),
-            ]).toList(),
-          ),
-        ] else
-          const Text('Esta actividad no requiere transporte de material excavado.'),
-        Text('Sub-total Transporte / $unidad: ${_money.format(subtotalTransporte)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-      ]);
+transporte_df = pd.DataFrame({
+    "ÍTEM": ["MATERIAL EXCAVADO", "BOTADERO"],
+    "DISTANCIA": [distancia_botadero, ""],
+    "CANTIDAD (m³)": [cantidad_transporte, cantidad_transporte],
+    "m³-Km": [m3_km, ""],
+    "TARIFA": [tarifa_transporte, tarifa_vertimiento],
+    "VALOR PARCIAL": [valor_transporte_material, valor_vertimiento]
+})
 
-  Widget _manoObraCard(ApuActividad act, String unidad) => _card('6. Mano de obra', [
-        _numberInput('Rendimiento de cuadrilla ($unidad/día)', rendimientoCuadrilla, (v) => rendimientoCuadrilla = v),
-        _table(
-          columns: const ['Trabajador', 'Cant.', 'Jornal', 'Prest.', 'Jornal total', 'Rend/día', 'V. unitario'],
-          rows: act.manoObra.map((m) => [
-            m.nombre,
-            _num.format(m.cantidad),
-            _money.format(m.jornal),
-            _num.format(prestacionesSociales),
-            _money.format(m.jornal * prestacionesSociales),
-            _num.format(rendimientoCuadrilla),
-            _money.format(costoManoObraUnitario(m)),
-          ]).toList(),
-        ),
-        Text('Sub-total Mano de Obra / $unidad: ${_money.format(subtotalManoObra)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-      ]);
+st.dataframe(transporte_df, use_container_width=True)
+st.success(f"Sub - Total Transporte: {pesos(subtotal_transporte)}")
 
-  Widget _resumenCard(String unidad) => _card('7. Resumen del APU', [
-        _numberInput('Administración (%)', adminPct, (v) => adminPct = v),
-        _numberInput('Imprevistos (%)', imprevistosPct, (v) => imprevistosPct = v),
-        _numberInput('Utilidad (%)', utilidadPct, (v) => utilidadPct = v),
-        _table(columns: const ['Concepto', 'Valor'], rows: [
-          ['Sub-total Equipo / $unidad', _money.format(subtotalEquipo)],
-          ['Sub-total Materiales / $unidad', _money.format(subtotalMateriales)],
-          ['Sub-total Transporte / $unidad', _money.format(subtotalTransporte)],
-          ['Sub-total Mano de Obra / $unidad', _money.format(subtotalManoObra)],
-          ['Herramienta menor 5% M.O.', _money.format(herramientaMenor)],
-          ['Administración', _money.format(administracion)],
-          ['Imprevistos', _money.format(imprevistos)],
-          ['Utilidad', _money.format(utilidad)],
-          ['PRECIO UNITARIO APU / $unidad', _money.format(precioUnitario)],
-          ['VALOR TOTAL DEL ÍTEM', _money.format(valorTotalItem)],
-        ]),
-      ]);
+st.divider()
 
-  Widget _checklistCard(ApuActividad act, List<bool> checks, double cumplimiento) => _card('8. Lista de chequeo en campo', [
-        SizedBox(width: 600, child: LinearProgressIndicator(value: cumplimiento, minHeight: 10)),
-        Text('Cumplimiento: ${(cumplimiento * 100).toStringAsFixed(1)}%'),
-        ...List.generate(act.checklist.length, (i) => SizedBox(
-              width: 700,
-              child: CheckboxListTile(
-                value: checks[i],
-                title: Text(act.checklist[i]),
-                onChanged: (v) => setState(() => checks[i] = v ?? false),
-              ),
-            )),
-      ]);
+# =====================================================
+# MANO DE OBRA
+# =====================================================
 
-  Widget _tablaFinal(ApuActividad act, String unidad) => _card('9. Tabla final del APU', [
-        _infoBox('APU: $actividad | Unidad: $unidad | Proyecto: $proyecto | Capítulo: $capitulo'),
-        _table(columns: const ['Concepto', 'Valor'], rows: [
-          ['Costo directo + herramienta menor', _money.format(baseAiu)],
-          ['AIU total', _money.format(administracion + imprevistos + utilidad)],
-          ['Precio unitario', _money.format(precioUnitario)],
-          ['Cantidad de obra', '${_num.format(cantidadObra)} $unidad'],
-          ['Valor total', _money.format(valorTotalItem)],
-        ]),
-      ]);
+st.subheader("4. MANO DE OBRA")
 
-  Widget _infoBox(String text) => Container(
-        width: 420,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFBFDBFE))),
-        child: Text(text),
-      );
+trabajadores_seleccionados = st.multiselect(
+    "Seleccione trabajadores",
+    list(MANO_OBRA_DB.keys()),
+    default=["Oficial", "Ayudante", "Operador retroexcavadora"]
+)
 
-  Widget _table({required List<String> columns, required List<List<String>> rows}) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowColor: WidgetStateProperty.all(const Color(0xFFE5E7EB)),
-        columns: columns.map((c) => DataColumn(label: Text(c, style: const TextStyle(fontWeight: FontWeight.bold)))).toList(),
-        rows: rows.map((r) => DataRow(cells: r.map((v) => DataCell(Text(v))).toList())).toList(),
-      ),
-    );
-  }
-}
+filas_mano = []
 
-class ApuActividad {
-  ApuActividad({
-    required this.unidad,
-    required this.descripcion,
-    required this.checklist,
-    required this.materiales,
-    required this.manoObra,
-    required this.equipos,
-  });
+for trabajador in trabajadores_seleccionados:
+    c1, c2 = st.columns(2)
 
-  final String unidad;
-  final String descripcion;
-  final List<String> checklist;
-  final List<MaterialItem> materiales;
-  final List<ManoObraItem> manoObra;
-  final List<EquipoItem> equipos;
-}
+    with c1:
+        cantidad_trabajadores = st.number_input(
+            f"Cantidad de {trabajador}",
+            min_value=0.0,
+            value=1.0,
+            step=1.0,
+            key=f"cantidad_trab_{trabajador}"
+        )
 
-class EquipoItem {
-  EquipoItem(this.nombre, this.tipo, this.cantidad, this.tarifaHora, this.rendimientoHora);
-  final String nombre;
-  final String tipo;
-  double cantidad;
-  double tarifaHora;
-  double rendimientoHora;
-}
+    with c2:
+        jornal = st.number_input(
+            f"Jornal {trabajador}",
+            min_value=0.0,
+            value=float(MANO_OBRA_DB[trabajador]),
+            step=1000.0,
+            key=f"jornal_{trabajador}"
+        )
 
-class MaterialItem {
-  MaterialItem(this.nombre, this.unidad, this.cantidadPorUnidad, this.precioUnitario);
-  final String nombre;
-  final String unidad;
-  double cantidadPorUnidad;
-  double precioUnitario;
-}
+    jornal_total = jornal * PRESTACIONES_SOCIALES
+    rendimiento_mano_obra = rendimiento_excavacion * JORNADA_HORAS
 
-class ManoObraItem {
-  ManoObraItem(this.nombre, this.cantidad, this.jornal);
-  final String nombre;
-  double cantidad;
-  double jornal;
-}
+    valor_mano = (
+        cantidad_trabajadores * jornal_total
+    ) / rendimiento_mano_obra if rendimiento_mano_obra > 0 else 0
+
+    filas_mano.append({
+        "TRABAJADOR": trabajador.upper(),
+        "CANTIDAD": cantidad_trabajadores,
+        "JORNAL": jornal,
+        "PRESTACIONES": PRESTACIONES_SOCIALES,
+        "JORNAL TOTAL": jornal_total,
+        "RENDIMIENTO": rendimiento_mano_obra,
+        "VALOR PARCIAL": valor_mano
+    })
+
+mano_df = pd.DataFrame(filas_mano)
+subtotal_mano = mano_df["VALOR PARCIAL"].sum() if not mano_df.empty else 0
+
+st.dataframe(mano_df, use_container_width=True)
+st.success(f"Sub - Total Mano de obra: {pesos(subtotal_mano)}")
+
+st.divider()
+
+# =====================================================
+# RESUMEN
+# =====================================================
+
+total_costos_directos = subtotal_equipo + subtotal_materiales + subtotal_transporte + subtotal_mano
+
+st.metric("TOTAL COSTOS DIRECTOS", pesos(total_costos_directos))
+
+# =====================================================
+# TABLA FINAL TIPO EXCEL
+# =====================================================
+
+st.subheader("TABLA COMPLETA DEL APU")
+
+html = f"""
+<style>
+.apu-table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: Arial, sans-serif;
+    background-color: white;
+    color: black;
+}}
+.apu-table th, .apu-table td {{
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+    color: black;
+}}
+.section {{
+    background-color: #e6e6e6;
+    font-weight: bold;
+    text-align: left !important;
+}}
+.subtotal {{
+    font-weight: bold;
+    text-align: right !important;
+}}
+.total {{
+    font-weight: bold;
+    background-color: #d9d9d9;
+}}
+</style>
+
+<table class="apu-table">
+<tr><td colspan="7"><b>ANÁLISIS DE PRECIOS UNITARIOS APU</b></td></tr>
+<tr><td>PROYECTO</td><td colspan="6">{proyecto}</td></tr>
+<tr><td>CONTRATO</td><td colspan="6">{contrato}</td></tr>
+<tr><td>AÑO</td><td colspan="6">{anio}</td></tr>
+<tr><td>CAPÍTULO</td><td colspan="6">{capitulo}</td></tr>
+<tr><td>ÍTEM</td><td colspan="6">{item}</td></tr>
+<tr><td>UNIDAD</td><td colspan="6">{unidad}</td></tr>
+
+<tr><td colspan="7" class="section">PARÁMETROS DE CÁLCULO</td></tr>
+<tr><th>PARÁMETRO</th><th colspan="3">VALOR</th><th colspan="3">UNIDAD</th></tr>
+"""
+
+for _, row in parametros_df.iterrows():
+    html += f"""
+    <tr>
+    <td>{row['PARÁMETRO']}</td>
+    <td colspan="3">{formato(row['VALOR'], 3)}</td>
+    <td colspan="3">{row['UNIDAD']}</td>
+    </tr>
+    """
+
+html += """
+<tr><td colspan="7" class="section">1. EQUIPO</td></tr>
+<tr>
+<th>DESCRIPCIÓN</th><th>TIPO</th><th>UND</th><th>CANTIDAD</th>
+<th>TARIFA</th><th>RENDIMIENTO</th><th>VALOR PARCIAL</th>
+</tr>
+"""
+
+for _, row in equipo_df.iterrows():
+    html += f"""
+    <tr>
+    <td>{row['DESCRIPCIÓN']}</td>
+    <td>{row['TIPO']}</td>
+    <td>{row['UND']}</td>
+    <td>{formato(row['CANTIDAD'], 2)}</td>
+    <td>{pesos(row['TARIFA'])}</td>
+    <td>{formato(row['RENDIMIENTO'], 2)}</td>
+    <td>{pesos(row['VALOR PARCIAL'])}</td>
+    </tr>
+    """
+
+html += f"""
+<tr><td colspan="6" class="subtotal">Sub - Total Equipo</td><td>{pesos(subtotal_equipo)}</td></tr>
+
+<tr><td colspan="7" class="section">2. MATERIALES DE OBRA</td></tr>
+<tr>
+<th>DESCRIPCIÓN</th><th colspan="2">UNIDAD</th><th>PRECIO UNITARIO</th>
+<th>CANTIDAD</th><th colspan="2">VALOR PARCIAL</th>
+</tr>
+"""
+
+for _, row in materiales_df.iterrows():
+    html += f"""
+    <tr>
+    <td>{row['DESCRIPCIÓN']}</td>
+    <td colspan="2">{row['UNIDAD']}</td>
+    <td>{pesos(row['PRECIO UNITARIO'])}</td>
+    <td>{formato(row['CANTIDAD'], 3)}</td>
+    <td colspan="2">{pesos(row['VALOR PARCIAL'])}</td>
+    </tr>
+    """
+
+html += f"""
+<tr><td colspan="6" class="subtotal">Sub - Total Materiales de obra</td><td>{pesos(subtotal_materiales)}</td></tr>
+
+<tr><td colspan="7" class="section">3. TRANSPORTE</td></tr>
+<tr>
+<th>ÍTEM</th><th>DISTANCIA</th><th>CANTIDAD</th><th>m³-Km</th>
+<th>TARIFA</th><th colspan="2">VALOR PARCIAL</th>
+</tr>
+"""
+
+for _, row in transporte_df.iterrows():
+    html += f"""
+    <tr>
+    <td>{row['ÍTEM']}</td>
+    <td>{row['DISTANCIA']}</td>
+    <td>{row['CANTIDAD (m³)']}</td>
+    <td>{row['m³-Km']}</td>
+    <td>{pesos(row['TARIFA'])}</td>
+    <td colspan="2">{pesos(row['VALOR PARCIAL'])}</td>
+    </tr>
+    """
+
+html += f"""
+<tr><td colspan="6" class="subtotal">Sub - Total Transporte</td><td>{pesos(subtotal_transporte)}</td></tr>
+
+<tr><td colspan="7" class="section">4. MANO DE OBRA</td></tr>
+<tr>
+<th>TRABAJADOR</th><th>CANTIDAD</th><th>JORNAL</th>
+<th>PRESTACIONES</th><th>JORNAL TOTAL</th>
+<th>RENDIMIENTO</th><th>VALOR PARCIAL</th>
+</tr>
+"""
+
+for _, row in mano_df.iterrows():
+    html += f"""
+    <tr>
+    <td>{row['TRABAJADOR']}</td>
+    <td>{formato(row['CANTIDAD'], 2)}</td>
+    <td>{pesos(row['JORNAL'])}</td>
+    <td>{row['PRESTACIONES']}</td>
+    <td>{pesos(row['JORNAL TOTAL'])}</td>
+    <td>{formato(row['RENDIMIENTO'], 2)}</td>
+    <td>{pesos(row['VALOR PARCIAL'])}</td>
+    </tr>
+    """
+
+html += f"""
+<tr><td colspan="6" class="subtotal">Sub - Total Mano de obra</td><td>{pesos(subtotal_mano)}</td></tr>
+<tr class="total"><td colspan="6">TOTAL COSTOS DIRECTOS</td><td>{pesos(total_costos_directos)}</td></tr>
+</table>
+"""
+
+st.markdown(html, unsafe_allow_html=True)
